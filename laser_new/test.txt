@@ -1,2 +1,0 @@
-#Header of file, ignore
-[1,114,114,120,0]
