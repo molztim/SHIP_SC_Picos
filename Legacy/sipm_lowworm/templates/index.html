@@ -1,0 +1,55 @@
+{% args v_old,vramp_old,i_old,call_conn, call_HV, call_v, call_ramp, call_i %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Pico W</title>
+    </head>
+    <body>
+        <h1>Pico W</h1>
+        <h2>Set and Enable HV Output</h2>
+        <p>Control HV Status</p>
+        <a href=\led=on><button>ON</button></a>&nbsp;
+        <a href=\led=off><button>OFF</button></a>
+
+        <form action="", method="post">
+             <p>Output Voltag:</p>
+             <p><input type="text" id="bz" name ="v_out"> | last selected {{ v_old }} [V]</p>
+
+             <p>Rampup Speed:</p>
+             <p><input type="text" id="bt" name ="vramp_out"> | last selected {{ vramp_old }} [V/s] </p>
+             
+             <p>Current Maximum:</p>
+             <p><input type="text" id="bt" name ="i_out"> | last selected {{ i_old }} [mA] </p>
+
+             <p><input type="submit" name="submit_button" value="Submit!"></p>
+
+
+        </form>
+        
+        <h2>HV Output Status</h2>
+        
+        <form action="", method="post">
+        
+             <p>Connection: {{ call_conn }}</p> 
+             <p>HV: {{ call_HV }}</p> 
+             <p>Voltage:{{ call_v }} [V] </p> 
+             <p>Ramp-up: {{ call_ramp }} [V/s]</p> 
+             <p>Current: {{ call_i }} [mA]</p> 
+             
+             
+
+
+             <p><input type="submit" name="load_button" value="Call Device"></p>
+
+
+        </form>
+        
+        <h2>Data Logs</h2>
+        <a href=\download target="_blank">Download most recent Log</a>
+
+        <script>
+        </script>
+    </body>
+</html>
+
