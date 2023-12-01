@@ -1,0 +1,2 @@
+#temp, pres, hum offset - NO EMPTY LINES!
+22.08.2023-13:34:26|0,0,0
