@@ -22,7 +22,7 @@ def t_wlan(ssid, password, adresses):
                 elif wlan.status() == network.STAT_CONNECT_FAIL:
                     raise RuntimeError("No f*cking idea!")
                 else:
-                    #raise RuntimeError("Oh shit, not gud")
+                    raise RuntimeError("Oh shit, not gud")
                     print(".",end="")
             time.sleep_ms(1000)
 
@@ -32,6 +32,26 @@ def t_wlan(ssid, password, adresses):
     
     wlan.ifconfig(adresses)
     return wlan.ifconfig()
+
+def pico_wlan(SSID, PASS, IP):
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(SSID, PASS)
+
+    for i in range(10):
+        if wlan.isconnected():
+            wlan.ifconfig(IP)
+            return wlan.ifconfig()
+        else:
+            time.sleep(0.5)
+
+        if not wlan.isconnected():
+            print(".",end="")
+            
+        time.sleep_ms(1000)
+
+    raise RuntimeError(f"Connection not established! Code {wlan.status()}")
+
 
 def config_writer(rtc, contentlist):
     f = open("lastconfig.txt","a")
@@ -44,10 +64,18 @@ def config_writer(rtc, contentlist):
     return None
 
 def config_reader():
-    f = open("lastconfig.txt","a")
+    f = open("lastconfig.txt","r")
     lines = f.read()
     f.close()
-    contentlist = [int(e) for e in lines.split("\n")[-1].split("|")[-1].split(",")]
+    contentlist = []
+    for number in lines.split("\n")[-1].split("|")[-1].split(","):
+        try:
+            if "." in number:
+                contentlist+= [float(number)]
+            else:
+                contentlist+= [int(number)]
+        except Exception as err:
+            raise RuntimeError(f"Number in config is neither int nor float! {err}")
     return contentlist
 
 

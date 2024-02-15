@@ -1,11 +1,14 @@
+#Wed Feb 14 15:23:42 2024
 import socket
 import time
-from pico_ultis import *
+from pico_utils import *
 from machine import Pin, I2C, soft_reset, reset
 #from laser_device import device
 from machine import RTC
 import _thread
 import gc
+
+error_log("###New Run Start###")
 
 rtc = RTC()
 
@@ -50,14 +53,15 @@ if sensor_file:
 
 for i in range(5):
     try:
-        wlan_ips = t_wlan(SSID,PASS,IP)
+        #wlan_ips = t_wlan(SSID,PASS,IP)
+        wlan_ips = pico_wlan(SSID,PASS,IP)
         log("Device IP:",wlan_ips[0])
         time.sleep_ms(5)
         break
     except Exception as e:
         blink(led)
-        log("No network conenction found!")
-        error_log(f"No network conenction found! {e}")
+        log(f"Network Error: {e}")
+        error_log(f"Network Error: {e}")
 
 if wlan_ips == '0.0.0.0':
     time.sleep(60)
@@ -70,14 +74,16 @@ try:
     #Start Server socket
     addr = socket.getaddrinfo(wlan_ips[0], 80)[0][-1]
     s = socket.socket()
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('',80))
     #I hope this socket command solves the EADDRINUSE errors
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.listen(5)
     log('Socket listening on', addr)
 except Exception as e:
     log(f"Socket Starting Error: {e}")
     error_log(f"Socket Starting Error: {e}")
+    s.close()
+    time.sleep(1)
     soft_reset() 
 
 #Lets get the sensor running
@@ -93,12 +99,16 @@ if sensor:
 log("Ready for operation!")
 try:    
     while True:
+        log("Listening...")
         cl, addr = s.accept()
+        log("Connected!")
         while True:
             try:
                 package = cl.recv(1024)
                 rcv = package.decode('utf-8')
                 if rcv == "":
+                    log("Terminated connection")
+                    cl.close()
                     break
                 log("Received bytes:",rcv)
 
@@ -118,6 +128,11 @@ try:
                     response = "INTERNAL"
                 elif "IDENTIFY" in rcv:
                     response = ID
+                elif "NULL_CONFIG" in rcv:
+                    config = open("lastconfig.txt","w")
+                    config.write("Sensorconfiglog")
+                    config.close()
+                    soft_reset()
                 else:
                     if sensor:
                         try:
@@ -132,20 +147,19 @@ try:
             except Exception as e:
                 #Close socket (must have!)
                 log("Close interaction with: {}\n".format(e))
-                #if sensor and second_thread:
-                #    log("Kill Cores #0 and #1")
-                #    sensor.kill()
                 cl.close()
-                #s.close()
-                time.sleep(1)
+                s.close()
+                if sensor and second_thread:
+                    log("Kill Cores #0 and #1")
+                    sensor.kill()
                 break
 except Exception as e:
     log(f"Exit mainloop with error {e}.")
 finally:
     log(f"Exit mainloop.")
+    s.close()
+    log("Close socket")
     if sensor and second_thread:
         log("Kill Cores #0 and #1")
         sensor.kill()
-    time.sleep(0.2)
-    s.close()
     soft_reset()

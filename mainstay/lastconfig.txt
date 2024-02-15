@@ -1,1 +1,1 @@
-#cal_distance,calib,laserstatus,fastlaserflag,orientation - WARNING: NO EMPTY LINES AT THE END!
+Sensorconfiglog
