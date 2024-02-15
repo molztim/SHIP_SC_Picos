@@ -15,14 +15,14 @@ class device:
     def __init__(self,rtc):
         try:
             self.rtc = rtc          #The rtc
-            self.ID = "SIPM & EMUSIC POWER #1 10.42.0.125"
-            self.IP = '10.42.0.125'
+            self.ID = "SIPM & EMUSIC POWER #7 10.42.0.131"
+            self.IP = '10.42.0.131'
             
 
             self.read_flag = False  #Blocks/releases the data varaible for reading
             self.data = 0           #Main data 
             self.runFlag = True     #Activate while loop for meausrements, important to to shut down the kernel
-            self.voltage = 30.0        
+            self.voltage = 43       
             self.max_voltage = 80.0
             self.max_current = 10
             self.ramp = 2
@@ -39,7 +39,7 @@ class device:
 
             try:
                 self.DEV = A7585(112,4,5)
-                self.DEV.startup(self.max_voltage, self.max_current, self.voltage, self.ramp)
+                self.DEV.startup(self.max_voltage, self.max_current, self.voltage, self.ramp,rampuptime=self.ramp)
                 #self.DEV.SetTemperatureSensor("CUSTOM", *self.TMP37)
                 #self.DEV.SetSIPMtcoef(34)
             except Exception as e:
@@ -83,15 +83,15 @@ class device:
 
             current_config = self.EMUSIC.read_config()
             saved_config = self.EMUSIC.read_calib()    
-            config_status = [current_config==saved_config]
+            config_status = int(current_config==saved_config)
 
-            ch_status = current_config[24::11]
-            pz_status = current_config[29::11]
-            rladpz_status = [current_config[17]]
-            capppz_status = [current_config[16]]
-            vdcch_status = [current_config[3]]
-            lowat_status = [current_config[0]]
-            offsset = current_config[26::11]       
+            ch_status = ",".join(str(x) for x in current_config[24::11])
+            pz_status = ",".join(str(x) for x in current_config[29::11])
+            rladpz_status = current_config[17]
+            capppz_status = current_config[16]
+            vdcch_status = current_config[3]
+            lowat_status = current_config[0]
+            offsset = ",".join(str(x) for x in current_config[26::11])       
 
             self.data = f"{Vout:.2f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{config_status},{ch_status},{pz_status},{rladpz_status},{capppz_status},{vdcch_status},{lowat_status},{offsset}"       
             stop = utime.ticks_ms()
@@ -101,13 +101,11 @@ class device:
             
 
     def server(self,received):
-        if "GET_EMUSIC" in received:
+        if "GET_EMUSIC_CONF" in received:
             self.read_flag = True
-            answer = self.EMUSIC.read_config()
+            current_config = self.EMUSIC.read_config()
             self.read_flag = False
-            lis = ",".join(str(i) for i in answer)
-            summe = sum(answer)
-            return f"{lis} {summe}"
+            return f"{current_config}"
         
         elif "GET" in received:
             #The readFlag inhiibts the writing of data to send the latest data back to teh main software
@@ -119,6 +117,7 @@ class device:
             return answer
         
         elif "SET" in received:
+            self.read_flag = True
             if "SET_V" in received:
                 Vnew = float(received.split(" ")[1])
                 self.DEV.SetV(Vnew)
@@ -172,12 +171,13 @@ class device:
                 self.EMUSIC.write_eMUSIC(ENA,"RLAD")
             
             elif "SET_eMUSIC" in received:
-                data = received.split(" ")[1]
+                data = received
                 config = [int(x) for x in data.split(" ",1)[1].replace(" ","")[1:-1].split(",")]
                 log("Config rcv.! :",config[:5],"...")
                 self.EMUSIC.write_calib(config)
                 self.EMUSIC.write_config(config)
-
+                
+            self.read_flag = False
             config_writer(self.rtc,[self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus])
             return "INTERNAL"
         else:
