@@ -1,3 +1,4 @@
+
 #An examplary sensor/device
 from pico_utils import *
 import gc
@@ -15,8 +16,8 @@ class device:
     def __init__(self,rtc):
         try:
             self.rtc = rtc          #The rtc
-            self.ID = "SIPM & EMUSIC POWER #7 10.42.0.131"
-            self.IP = '10.42.0.131'
+            self.ID = "SIPM & EMUSIC POWER 10.42.0.132"
+            self.IP = '10.42.0.132'
             
 
             self.read_flag = False  #Blocks/releases the data varaible for reading
@@ -26,7 +27,7 @@ class device:
             self.max_voltage = 80.0
             self.max_current = 10
             self.ramp = 2
-            self.TMP37 = [0,20,0] #V, mV, mV
+            self.TMP37 = [0,50,0] #C²/V, C/V, V
             self.enable_Pin = Pin(22, Pin.OUT, value=0)
             self.HVStatus = 0
             self.eMUSIC_config = []
@@ -40,8 +41,8 @@ class device:
             try:
                 self.DEV = A7585(112,4,5)
                 self.DEV.startup(self.max_voltage, self.max_current, self.voltage, self.ramp,rampuptime=self.ramp)
-                #self.DEV.SetTemperatureSensor("CUSTOM", *self.TMP37)
-                #self.DEV.SetSIPMtcoef(34)
+                self.DEV.SetTemperatureSensor("CUSTOM", *self.TMP37)
+                #self.DEV.SetSIPMtcoef(-34)
             except Exception as e:
                 log(f"A7585D cannot be started up with Error: {e}")
                 error_log(f"A7585D cannot be started up with Error: {e}")
@@ -73,31 +74,45 @@ class device:
             
     
     def measurement(self):
+        eMUSIC_flag = True
         while self.runFlag:
-            start = utime.ticks_ms()
-            Vout = self.DEV.GetVout()
-            Iout = self.DEV.GetIout()
-            Vin = self.DEV.GetVin()
-            statusHV = self.DEV.GetHVOn()
-            connectionHV = self.DEV.GetConnectionStatus()
+            if not self.read_flag:
+                start = utime.ticks_ms()
+                Vout = self.DEV.GetVout()
+                Iout = self.DEV.GetIout()
+                Vin = self.DEV.GetVin()
+                statusHV = self.DEV.GetHVOn()
+                connectionHV = self.DEV.GetConnectionStatus()
+                #temp = (self.DEV.GetTref() - 32) * 5/9 
+                temp = self.DEV.GetTref()
 
-            current_config = self.EMUSIC.read_config()
-            saved_config = self.EMUSIC.read_calib()    
-            config_status = int(current_config==saved_config)
+                if eMUSIC_flag:
+                    self.eMUSIC_config = self.EMUSIC.read_config()
+                    eMUSIC_flag = False
+                else: 
+                    eMUSIC_flag = True 
 
-            ch_status = ",".join(str(x) for x in current_config[24::11])
-            pz_status = ",".join(str(x) for x in current_config[29::11])
-            rladpz_status = current_config[17]
-            capppz_status = current_config[16]
-            vdcch_status = current_config[3]
-            lowat_status = current_config[0]
-            offsset = ",".join(str(x) for x in current_config[26::11])       
+                saved_config = self.EMUSIC.read_calib()    
+                config_status = int(self.eMUSIC_config==saved_config)
+                if config_status == 0:
+                    self.EMUSIC.write_config(saved_config)
+                    log("Renewed Config!")
 
-            self.data = f"{Vout:.2f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{config_status},{ch_status},{pz_status},{rladpz_status},{capppz_status},{vdcch_status},{lowat_status},{offsset}"       
-            stop = utime.ticks_ms()
+                ch_status = ",".join(str(x) for x in self.eMUSIC_config[24::11])
+                pz_status = ",".join(str(x) for x in self.eMUSIC_config[29::11])
+                rladpz_status = self.eMUSIC_config[17]
+                capppz_status = self.eMUSIC_config[16]
+                vdcch_status = self.eMUSIC_config[3]
+                lowat_status = self.eMUSIC_config[0]
+                offsset = ",".join(str(x) for x in self.eMUSIC_config[26::11]) 
 
-            print(f"Data: {self.data} {utime.ticks_diff(stop,start)}")
-            utime.sleep_ms(500)
+
+
+                self.data = f"{Vout:.2f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{config_status},{ch_status},{pz_status},{rladpz_status},{capppz_status},{vdcch_status},{lowat_status},{offsset},{temp:.2f}"       
+                stop = utime.ticks_ms()
+
+                #print(f"Data: {self.data} {utime.ticks_diff(stop,start)}")
+                utime.sleep(30)
             
 
     def server(self,received):
