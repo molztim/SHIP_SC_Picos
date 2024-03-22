@@ -60,14 +60,14 @@ class device:
     def measurement(self):
         while self.runFlag:
             avg_adc = 0
-            n = 3
+            n = 100
             start = utime.ticks_ms()
             for i in range(n):
-                avg_adc = self.adc0.read_u16()/16  - self.adc_offset/16
+                avg_adc += (self.adc0.read_u16()>>4) / n 
             measV = avg_adc*self.adc_steps
-            self.pressure = ((measV / self.ohm * 1000) - self.low)/16 #bar
+            self.pressure = ((measV / self.ohm * 1000) - self.low)/16 * 1000 #mbar
             stop = utime.ticks_ms()
-            #self.level = self.pressure * 1e5 / (self.g*self.density)
+            self.level = self.pressure * 1e5 / (self.g*self.density) #mm
 
             print(f"Data: {self.pressure} {utime.ticks_diff(stop,start)}")
             
@@ -76,11 +76,11 @@ class device:
         if "GET" in received:
             #The readFlag inhiibts the writing of data to send the latest data back to teh main software
             self.read_flag = True
-            self.cal_pressure = str(self.pressure - self.press_offset)
+            self.cal_pressure = (self.pressure - self.press_offset)
             self.read_flag = False
 
             #Now we gan return the data
-            return f"{self.cal_pressure},{self.press_offset}"
+            return f"{self.cal_pressure:.0f},{self.level:.0f}"
         
         elif "SET" in received:
             newOffset = float(received.split(" ")[1])
