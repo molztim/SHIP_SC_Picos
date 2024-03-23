@@ -13,7 +13,8 @@ from datetime import datetime
 #D) Keep this terminal alive!
 
 
-host ="localhost"#"194.12.168.9"
+host ="localhost"#"194.12.159.165"
+#If you are at CERN, please use 194.12.159.165 instead of localhost!
 port = 8086
 token ="ACeJ_k8yw6RTS2mz6n9nvDdh8N3zcNd8_-xeEHpfxlzy66Eu1gq74MzDVjTTZQDFZL5mm-W1jyG9tjf7DYTRsg=="
 #A quer example: query = "SELECT value FROM Pressure WHERE sensor='PRESS_B1' AND time > now()-5d;"
