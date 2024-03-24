@@ -179,7 +179,7 @@ class A7585:
             self.SetNIPMRegFloat(NIPMREG_TEMP_Q, term_q)
             
     def SetSIPMtcoef(self,tcomp):
-        #tcomp is the thermal coefficient compensation in V/°C (typical: -34 mV/°C)
+        #tcomp is the thermal coefficient compensation in mV/°C (typical: -34 mV/°C)
         self.SetNIPMRegFloat(NIPMREG_TCOEF, tcomp)
         
 
