@@ -116,7 +116,7 @@ try:
                 response = "DUMMY"
                 if "NEW_DATA" in rcv:
                     rcv_new_file(rcv)
-                    response = "INTERNAL"
+                    response = "NEW_FILE"
                 elif "RESTART" in rcv:
                     response = reprogramm(rcv)
                 elif "NEW_SOFTWARE" in rcv:
