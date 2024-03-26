@@ -140,7 +140,8 @@ try:
                         except Exception as e:
                             log(f"Sensor server failed! {e}")
                             error_log(f"Sensor server failed! {e}")
-                cl.send(response+'\r')
+                if response != "INTERNAL":
+                    cl.send(response+'\r')
                 if "TEST" not in rcv and response == "REPROGRAM":
                     log("Restart!")
                     reset()
