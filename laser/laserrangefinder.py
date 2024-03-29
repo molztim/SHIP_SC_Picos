@@ -1,5 +1,5 @@
 from machine import UART, Pin
-from time import sleep
+from pico_utils import *
 import time
 
 def CS(data):
@@ -110,7 +110,8 @@ class laserrangefinder():
                     continue
 
     def read4(self):
-        while True:
+        #Lets say 10s
+        for i in range(10000):
             rxData = self.uart.read()
             if rxData != None:
                 floatdistance = -1
@@ -128,7 +129,8 @@ class laserrangefinder():
                     else:
                         continue
             else:
-                continue
+                time.sleep_ms(1)
+        return "LASER_DIED"
             #print(f"RAW uart: {rxData}",len(rxData),floatdistance)
             
 
