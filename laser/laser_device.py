@@ -5,6 +5,8 @@ import _thread
 import utime
 import random as r
 from laserrangefinder import laserrangefinder
+from machine import reset
+from pico_utils import *
 
 
 class device:
@@ -12,7 +14,7 @@ class device:
     def __init__(self,rtc):
         try:
             self.rtc = rtc          #The rtc
-            self.ID = "LASER SENSOR 10.42.0.142"
+            self.ID = "LASER SENSOR M1 10.42.0.142"
             self.IP = '10.42.0.142'
             
 
@@ -50,17 +52,31 @@ class device:
     def measurement(self):
         while self.runFlag:
             avg_distance = 0
+            read_once = False
             n = 3
             start = utime.ticks_ms()
             for i in range(n):
-                avg_distance += round(self.laser.read4()*1000 / n)
+                new_read = self.laser.read4()
+                if new_read == "LASER_DIED":
+                    self.laser.laserOFF()
+                    utime.sleep(1)
+                    self.laser.laserON()
+                else:
+                    read_once = True
+                    avg_distance += round(new_read*1000 / n)
             stop = utime.ticks_ms()
+
             if not self.fastlaserflag:
                 utime.sleep(5*60 -2)
             while self.read_flag:
                 utime.sleep_ms(0.1)
-            self.data = avg_distance
-            print(f"Data: {self.data} {utime.ticks_diff(stop,start)}")
+
+            if read_once:
+                self.data = avg_distance
+                print(f"Data: {self.data} {utime.ticks_diff(stop,start)}")
+            else:
+                self.laser.laserOFF()
+                reset()
             
             """
             print("Buffer Core #2:",end="")
@@ -84,7 +100,7 @@ class device:
             self.read_flag = False
 
             #Now we gan return the data
-            return f"{self.cal_distance},{self.calib},{self.laserstatus},{self.fastlaserflag},{self.orientation}"
+            return f"{self.cal_distance},{self.laserstatus},{self.fastlaserflag},{self.orientation}"
         
         elif "SET" in received:
             if "DIST" in received:
