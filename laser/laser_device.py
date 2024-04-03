@@ -69,7 +69,7 @@ class device:
             if not self.fastlaserflag:
                 utime.sleep(5*60 -2)
             while self.read_flag:
-                utime.sleep_ms(0.1)
+                utime.sleep_ms(1)
 
             if read_once:
                 self.data = avg_distance
