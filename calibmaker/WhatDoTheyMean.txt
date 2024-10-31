@@ -1,0 +1,33 @@
+PZ = Ole Zero Cancellator
+SE = Singel Ended (SMA output)
+
+Sum HG = Summerized channel output with High gain
+Sum LG = Summerized channel output with low gain
+(These are two physicly different outputs!)
+
+#NAME# - PROPERTIES FROM MANUAL - WHAT IT PHYSICLY DOES
+---
+LOWATLAD_PZ - Switch PZ attenuation to low (1 = low, 0= high) - set to 1 and you get a lower amplitude
+VDCHG - voltage configuration of Sum HG - ?
+VDCLG - voltage configuration of Sum LG - ?
+VCM - Common mode configuration for SE - ?
+VDCCH - SE DC voltage configuration - ?
+IBCOMP - SE Channel comperator bias setting - ?
+VBG_ADJ - Reference voltage for Comperator threshold (V) - ?
+IBOP_SE - SE driverer reference voltage - ?
+IBAB_SE - SE driver bias voltage control
+FASTOR - ? - ?
+HLSUMHG - 
+ENDIFFDRVHG
+ENBYPASSHG
+ENPZHG
+ENCHSUM
+VLIM
+CAPPZ
+RLAD
+IBAB_DIFF
+IBOP_DIFF
+IBPAIR
+IBAB_PZ
+IBIN
+IBPZ_BUF
