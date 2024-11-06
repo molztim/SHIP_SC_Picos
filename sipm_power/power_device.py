@@ -16,8 +16,8 @@ class device:
     def __init__(self,rtc):
         try:
             self.rtc = rtc          #The rtc
-            self.ID = "SIPM & EMUSIC POWER 10.42.0.132"
-            self.IP = '10.42.0.132'
+            self.ID = "SIPM & EMUSIC POWER REPLACE_WITH_IP"
+            self.IP = 'REPLACE_WITH_IP'
             
 
             self.read_flag = False  #Blocks/releases the data varaible for reading
@@ -31,18 +31,19 @@ class device:
             self.enable_Pin = Pin(22, Pin.OUT, value=0)
             self.HVStatus = 0
             self.eMUSIC_config = []
+            self.Mode = 0
 
             try:
-                self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus  = config_reader()
+                self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus,self.Mode  = config_reader()
             except:
                 log("Error loading calibration file: Could not transfer data from list of calibrations to variables in class. Continue with normal configuration")
 
 
             try:
                 self.DEV = A7585(112,4,5)
-                self.DEV.startup(self.max_voltage, self.max_current, self.voltage, self.ramp,rampuptime=self.ramp)
+                self.DEV.startup(self.max_voltage, self.max_current, self.voltage, self.ramp,Mode=self.Mode,rampuptime=self.ramp)
                 self.DEV.SetTemperatureSensor("CUSTOM", *self.TMP37)
-                #self.DEV.SetSIPMtcoef(-34)
+                self.DEV.SetSIPMtcoef(-34)
             except Exception as e:
                 log(f"A7585D cannot be started up with Error: {e}")
                 error_log(f"A7585D cannot be started up with Error: {e}")
@@ -74,7 +75,7 @@ class device:
             
     
     def measurement(self):
-        eMUSIC_flag = True
+        #eMUSIC_flag = True
         while self.runFlag:
             if not self.read_flag:
                 start = utime.ticks_ms()
@@ -84,31 +85,32 @@ class device:
                 statusHV = self.DEV.GetHVOn()
                 connectionHV = self.DEV.GetConnectionStatus()
                 #temp = (self.DEV.GetTref() - 32) * 5/9 
+                mode = int(self.DEV.GetMode() == 2)
                 temp = self.DEV.GetTref()
 
-                if eMUSIC_flag:
-                    self.eMUSIC_config = self.EMUSIC.read_config()
-                    eMUSIC_flag = False
-                else: 
-                    eMUSIC_flag = True 
-
+                #if eMUSIC_flag:
+                #    self.eMUSIC_config = self.EMUSIC.read_config()
+                #    eMUSIC_flag = False
+                #else: 
+                #    eMUSIC_flag = True 
+                self.eMUSIC_config = self.EMUSIC.read_config()
                 saved_config = self.EMUSIC.read_calib()    
                 config_status = int(self.eMUSIC_config==saved_config)
                 if config_status == 0:
                     self.EMUSIC.write_config(saved_config)
                     log("Renewed Config!")
 
-                ch_status = ",".join(str(x) for x in self.eMUSIC_config[24::11])
-                pz_status = ",".join(str(x) for x in self.eMUSIC_config[29::11])
-                rladpz_status = self.eMUSIC_config[17]
-                capppz_status = self.eMUSIC_config[16]
+                ch_status = ",".join(str(x) for x in self.eMUSIC_config[24+4::11])
+                pz_status = ",".join(str(x) for x in self.eMUSIC_config[29+4::11])
+                rladpz_status = self.eMUSIC_config[17+4]
+                capppz_status = self.eMUSIC_config[16+4]
                 vdcch_status = self.eMUSIC_config[3]
                 lowat_status = self.eMUSIC_config[0]
-                offsset = ",".join(str(x) for x in self.eMUSIC_config[26::11]) 
+                offsset = ",".join(str(x) for x in self.eMUSIC_config[26+4::11])
 
 
 
-                self.data = f"{Vout:.2f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{config_status},{ch_status},{pz_status},{rladpz_status},{capppz_status},{vdcch_status},{lowat_status},{offsset},{temp:.2f}"       
+                self.data = f"{Vout:.2f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{config_status},{ch_status},{pz_status},{rladpz_status},{capppz_status},{vdcch_status},{lowat_status},{offsset},{temp:.2f},{mode}"       
                 stop = utime.ticks_ms()
 
                 #print(f"Data: {self.data} {utime.ticks_diff(stop,start)}")
@@ -136,29 +138,28 @@ class device:
             if "SET_V" in received:
                 Vnew = float(received.split(" ")[1])
                 self.DEV.SetV(Vnew)
+                self.voltage = Vnew
             elif "SET_MAXV" in received:
                 Vnew = float(received.split(" ")[1])
                 self.DEV.SetMaxV(Vnew)
+                self.max_voltage = Vnew
             elif "SET_MAXI" in received:
                 Inew = float(received.split(" ")[1])
                 self.DEV.SetMaxI(Inew)
+                self.max_current = Inew
             elif "SET_RAMP" in received:
                 Rampnew = float(received.split(" ")[1])
                 self.DEV.SetRampVs(Rampnew)
-            elif "SET_MODE" in received:
-                Modenew = int(received.split(" ")[1])
-                self.DEV.SetMode(Modenew)
+                self.ramp = Rampnew
             elif "SET_ENA" in received:
                 ENA = int(received.split(" ")[1])
                 self.enable_Pin.value(ENA)
                 self.HVStatus = ENA
-
             elif "SET_CHENABLE" in received:
                 ENA = int(received.split(" ")[1])
                 CHA = int(received.split(" ")[0][-1])-1
                 self.EMUSIC.write_eMUSIC(ENA,"ENCH",channel = CHA)
                 self.EMUSIC.write_line(ENA,"ENCH",channel = CHA)
-                
             elif "SET_CHPZ" in received:
                 ENA = int(received.split(" ")[1])
                 CHA = int(received.split(" ")[0][-1])-1
@@ -191,9 +192,18 @@ class device:
                 log("Config rcv.! :",config[:5],"...")
                 self.EMUSIC.write_calib(config)
                 self.EMUSIC.write_config(config)
-                
+
+            elif "SET_MODE" in received:
+                MODE = int(received.split(" ")[1])
+                if MODE == 0:
+                    self.DEV.SetMode(0) #Mode 0 is for digital mode w/ temp comp.
+                else:
+                    self.DEV.SetMode(2) #Mode 2 is for digital mode with temp. comp
+                self.Mode = MODE
+            
+            self.EMUSIC.write_calib(self.EMUSIC.read_config()) # Update Calibration
             self.read_flag = False
-            config_writer(self.rtc,[self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus])
+            config_writer(self.rtc,[self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus,self.Mode])
             return "INTERNAL"
         else:
             return "A"
@@ -202,3 +212,4 @@ class device:
         self.runFlag = False
         gc.collect()
         _thread.exit()
+

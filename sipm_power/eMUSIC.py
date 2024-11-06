@@ -1,3 +1,4 @@
+
 # Bibliotheken laden
 import machine
 import network 
@@ -8,6 +9,7 @@ import ubinascii
 from eMUSIC_register import *
 
 from machine import SPI, Pin
+import struct
 
 CSN = 17
 cs = Pin(CSN, mode=Pin.OUT, value=1)
@@ -63,30 +65,40 @@ class eMUSIC:
         if debug:
             print("READ COMMAND")
             print("Register to be called:",register,", Position(s) in return:",bits)
-            bit_data = ' '.join(f'{x:08b}' for x in data)
+            bit_data = ' '.join(f'{x:016b}' for x in data)
             print(f"Read Data: {data} {bit_data}\n")
         return data
     
     def write_eMUSIC(self, data,registername,channel=0, debug=False):
         register = eMUSIC_register[registername][0][channel]
         bits = eMUSIC_register[registername][1]
-        
         prev = self.read_eMUSIC(registername, channel = channel, debug=debug)
-        bit_prev = ''.join(f'{x:08b}' for x in prev)
         
-        data = bytes([data])
-        bit_data = ''.join(f'{x:b}' for x in data)
-        bit_data = '0' * (len(bits) - len(bit_data)) + bit_data
+        #print(data,prev,bits)
         
-        new_bits = bit_prev[:bits[0]] + bit_data + bit_prev[bits[-1]+1:]
-        write_data = int(new_bits,2).to_bytes(2,'big')
+        #bit_prev = ''.join(f'{x:08b}' for x in prev)
+        #bit_data = ''.join(f'{x:b}' for x in bytes([data]))
+        #bit_data = '0' * (len(bits) - len(bit_data)) + bit_data
+        #new_bits = bit_prev[:bits[0]] + bit_data + bit_prev[bits[-1]+1:]
+        #write_data = int(new_bits,2).to_bytes(2,'big')
+        #print(f"Original: ",new_bits,end=" ")
+        
+        mask = 2**len(bits)-1
+        mask_s = mask << (15-bits[-1])
+        data_s = data << (15-bits[-1])
+        
+        prev_bits = struct.unpack('>H', prev)[0]
+        prev_mask = prev_bits & ~mask_s
+        write_data = (prev_mask | data_s).to_bytes(2,'big')
 
         if debug:
             print("WRITE COMMAND")
             print(f"Bits in bitprev: {bit_prev}")
             print("Reigster to be called:",register,", Position(s) in return:",bits)
             print(f"Outgoing Data: {write_data} - {data} {bit_data} \n")
-        
+            
+        #print("New: {0:016b}".format((prev_mask | data_s)),end=" - ")
+        #print("{0:016b}".format((prev_mask | data_s)) == new_bits)
         self.spi_write(register,write_data)
         return None
 
@@ -101,6 +113,13 @@ class eMUSIC:
             pos = eMUSIC_register[key][1]        
             bit_data = ''.join(f'{x:08b}' for x in data)
             bits = ''.join([bit_data[i] for i in pos])
+            #print(key,bit_data,pos,bits)
+            
+            #mask = 2**len(bits)-1
+            #mask_s = mask << bits[0]
+            #value_s = data & mask_s
+            #value = value_s >> bits[0]
+
             red_config.append(int(bits,2))
             if key == "PENZPZCOMP":
                 channel +=1
@@ -153,4 +172,8 @@ class eMUSIC:
 #write_config(EMUSIC_CONFIG)
 #configile = read_config()
 #read_eMUSIC('VCM', debug=True)
+
+
+
+
 

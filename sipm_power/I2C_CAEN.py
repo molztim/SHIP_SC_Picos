@@ -185,6 +185,10 @@ class A7585:
 
     #Getters
     
+    def GetMode(self):
+        m = self.GetNIPMRegInteger(NIPMREG_FBMODE)
+        return m
+
     def GetVin(self):
         v = self.GetNIPMRegFloat(NIPMREG_VIN)
         return v
@@ -221,6 +225,7 @@ class A7585:
     
     def GetMaxV(self):
         return self.maxV
+    
 
     def startup(self,MaxV,MaxI,SetV,Ramp,Mode=0,intervall=100,rampuptime=15):
         self.SetMode(Mode)
@@ -249,3 +254,4 @@ class A7585:
     
     
     
+
