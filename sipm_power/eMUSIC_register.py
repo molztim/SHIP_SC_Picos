@@ -1,13 +1,5 @@
 ###################
-# WARNING! THIS IS JUST TESTSOFTWARE. DO NOT EMPLOY YET!
-####################
-
-###################
-# WARNING! THIS IS JUST TESTSOFTWARE. DO NOT EMPLOY YET!
-####################
-
-###################
-# WARNING! THIS IS JUST TESTSOFTWARE. DO NOT EMPLOY YET!
+# V2 EMUSIC REGISTER MAPS
 ####################
 
 R1 = [0,1,2,3,4,5,6,7]
