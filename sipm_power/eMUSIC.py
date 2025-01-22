@@ -1,3 +1,6 @@
+########################
+# V2
+#######################
 
 # Bibliotheken laden
 import machine
