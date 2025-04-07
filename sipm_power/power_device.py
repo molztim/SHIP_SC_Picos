@@ -1,4 +1,4 @@
-
+# Version 2.0 For TB Spring 2025
 #An examplary sensor/device
 from pico_utils import *
 import gc
@@ -16,22 +16,23 @@ class device:
     def __init__(self,rtc):
         try:
             self.rtc = rtc          #The rtc
-            self.ID = "SIPM & EMUSIC POWER REPLACE_WITH_IP"
-            self.IP = 'REPLACE_WITH_IP'
+            self.ID = "SIPM & EMUSIC POWER 10.42.0.130"
+            self.IP = '10.42.0.130'
+            # self.IP = '192.168.0.59'
             
 
             self.read_flag = False  #Blocks/releases the data varaible for reading
             self.data = 0           #Main data 
             self.runFlag = True     #Activate while loop for meausrements, important to to shut down the kernel
             self.voltage = 43       
-            self.max_voltage = 80.0
+            self.max_voltage = 50.0
             self.max_current = 10
             self.ramp = 2
             self.TMP37 = [0,50,0] #C²/V, C/V, V
             self.enable_Pin = Pin(22, Pin.OUT, value=0)
             self.HVStatus = 0
             self.eMUSIC_config = []
-            self.Mode = 0
+            self.Mode = 2
 
             try:
                 self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus,self.Mode  = config_reader()
@@ -87,6 +88,13 @@ class device:
                 #temp = (self.DEV.GetTref() - 32) * 5/9 
                 mode = int(self.DEV.GetMode() == 2)
                 temp = self.DEV.GetTref()
+                
+                vcorr = self.DEV.GetVcorrection() / 1000
+                vref = self.DEV.GetVRef()
+                vtarget = vref - vcorr
+                
+                #print(f"Measured Voltage: {Vout}")
+                #print(vcorr,vref,vtarget,self.DEV.GetMode(),temp)
 
                 #if eMUSIC_flag:
                 #    self.eMUSIC_config = self.EMUSIC.read_config()
@@ -107,12 +115,39 @@ class device:
                 vdcch_status = self.eMUSIC_config[3]
                 lowat_status = self.eMUSIC_config[0]
                 offsset = ",".join(str(x) for x in self.eMUSIC_config[26+4::11])
+                
+                dvth = ",".join(str(x) for x in self.eMUSIC_config[31+4::11])
+                #dvth = self.eMUSIC_config[31+4]
+                
+                # Test all channels for digital use
+                
+                #changeAllCH("PENCOMPSW",1) # Comperatore Enable
+                #changeAllCH("PENZPZCOMP",0) # Comperatore PZ
+                #changeAllCH("PHLCOMP",1) # Comperator Gain
+                #changeAllCH("ENDRVSE",0) # SE Driver Enable
+                PENCOMPSW = self.eMUSIC_config[33+4::11] == [1]*8
+                PENZPZCOMP = self.eMUSIC_config[34+4::11] == [0]*8
+                PHLCOMP = self.eMUSIC_config[32+4::11] == [1]*8
+                ENDRVSE = self.eMUSIC_config[30+4::11] == [0]*8
 
-
-
-                self.data = f"{Vout:.2f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{config_status},{ch_status},{pz_status},{rladpz_status},{capppz_status},{vdcch_status},{lowat_status},{offsset},{temp:.2f},{mode}"       
+                DIGIALL = int(all([PENCOMPSW,PENZPZCOMP,PHLCOMP,ENDRVSE]))
+                
+                SUMs = [int(self.eMUSIC_config[14+4] & 2**i != 0) for i in range(8)]               
+                #The order here must be CH0 -> CH7
+                sum_string = ",".join(str(x) for x in SUMs)
+                
+                ENPZHG = self.eMUSIC_config[13]
+                ENPZLG = self.eMUSIC_config[17]
+                HLSUMHG = self.eMUSIC_config[10]
+                HLSUMLG = self.eMUSIC_config[14]
+                ENBYPASSHG = self.eMUSIC_config[12]
+                ENBYPASSLG = self.eMUSIC_config[16] 
+                ENDIFFDRVHG = self.eMUSIC_config[11]
+                ENDIFFDRVLG = self.eMUSIC_config[15]
+                
+                self.data = f"{Vout:.3f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{config_status},{ch_status},{pz_status},{rladpz_status},{capppz_status},{vdcch_status},{lowat_status},{offsset},{temp:.2f},{mode},{dvth},{DIGIALL},{sum_string},{ENPZHG},{ENPZLG},{HLSUMHG},{HLSUMLG},{ENBYPASSHG},{ENBYPASSLG},{ENDIFFDRVHG},{ENDIFFDRVLG},{vtarget:.3f}"       
                 stop = utime.ticks_ms()
-
+                              
                 #print(f"Data: {self.data} {utime.ticks_diff(stop,start)}")
                 utime.sleep(30)
             
@@ -139,60 +174,27 @@ class device:
                 Vnew = float(received.split(" ")[1])
                 self.DEV.SetV(Vnew)
                 self.voltage = Vnew
+                
             elif "SET_MAXV" in received:
                 Vnew = float(received.split(" ")[1])
                 self.DEV.SetMaxV(Vnew)
                 self.max_voltage = Vnew
+                
             elif "SET_MAXI" in received:
                 Inew = float(received.split(" ")[1])
                 self.DEV.SetMaxI(Inew)
                 self.max_current = Inew
+                
             elif "SET_RAMP" in received:
                 Rampnew = float(received.split(" ")[1])
                 self.DEV.SetRampVs(Rampnew)
                 self.ramp = Rampnew
+                
             elif "SET_ENA" in received:
                 ENA = int(received.split(" ")[1])
                 self.enable_Pin.value(ENA)
                 self.HVStatus = ENA
-            elif "SET_CHENABLE" in received:
-                ENA = int(received.split(" ")[1])
-                CHA = int(received.split(" ")[0][-1])-1
-                self.EMUSIC.write_eMUSIC(ENA,"ENCH",channel = CHA)
-                self.EMUSIC.write_line(ENA,"ENCH",channel = CHA)
-            elif "SET_CHPZ" in received:
-                ENA = int(received.split(" ")[1])
-                CHA = int(received.split(" ")[0][-1])-1
-                self.EMUSIC.write_eMUSIC(ENA,"ENPZ",channel = CHA)
                 
-            elif "SET_CHOFFSET" in received:
-                ENA = int(received.split(" ")[1])
-                CHA = int(received.split(" ")[0][-1])-1
-                self.EMUSIC.write_eMUSIC(ENA,"DVOFFSET",channel = CHA)
-                
-            elif "SET_LOWAT" in received:
-                ENA = int(received.split(" ")[1])
-                self.EMUSIC.write_eMUSIC(ENA,"LOWATLAD_PZ")
-                
-            elif "SET_VDCCH" in received:
-                ENA = int(received.split(" ")[1])
-                self.EMUSIC.write_eMUSIC(ENA,"VDCCH")
-                
-            elif "SET_CAPPPZ" in received:
-                ENA = int(received.split(" ")[1])
-                self.EMUSIC.write_eMUSIC(ENA,"CAPPZ")
-                
-            elif "SET_RLADPZ" in received:
-                ENA = int(received.split(" ")[1])
-                self.EMUSIC.write_eMUSIC(ENA,"RLAD")
-            
-            elif "SET_eMUSIC" in received:
-                data = received
-                config = [int(x) for x in data.split(" ",1)[1].replace(" ","")[1:-1].split(",")]
-                log("Config rcv.! :",config[:5],"...")
-                self.EMUSIC.write_calib(config)
-                self.EMUSIC.write_config(config)
-
             elif "SET_MODE" in received:
                 MODE = int(received.split(" ")[1])
                 if MODE == 0:
@@ -200,8 +202,15 @@ class device:
                 else:
                     self.DEV.SetMode(2) #Mode 2 is for digital mode with temp. comp
                 self.Mode = MODE
+            # EMUSIC STUFF
             
-            self.EMUSIC.write_calib(self.EMUSIC.read_config()) # Update Calibration
+            elif "SET_EMUSIC_CONFIG" in received:
+                data = received
+                config = [int(x) for x in data.split(" ",1)[1].replace(" ","")[1:-1].split(",")]
+                log("Config rcv.! :",config[:5],"...")
+                self.EMUSIC.write_calib(config)
+                self.EMUSIC.write_config(config)
+
             self.read_flag = False
             config_writer(self.rtc,[self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus,self.Mode])
             return "INTERNAL"
