@@ -216,6 +216,12 @@ class A7585:
         t = self.GetNIPMRegFloat(NIPMREG_TREF)
         return t
     
+    def GetTSensor(self):
+        m2 = self.GetNIPMRegFloat(NIPMREG_TEMP_M2)
+        m = self.GetNIPMRegFloat(NIPMREG_TEMP_M)
+        q = self.GetNIPMRegFloat(NIPMREG_TEMP_Q)
+        return [m2,m,q]
+    
     def GetVcorrection(self):
         v = self.GetNIPMRegFloat(NIPMREG_CORRECTIONVOLTAGE)
         return v
@@ -225,6 +231,12 @@ class A7585:
     
     def GetMaxV(self):
         return self.maxV
+    
+    def GetVRef(self):
+        return self.GetNIPMRegFloat(NIPMREG_VTARGET)
+    
+    def GetTCoeff(self):
+        return self.GetNIPMRegFloat(NIPMREG_TCOEF)
     
 
     def startup(self,MaxV,MaxI,SetV,Ramp,Mode=0,intervall=100,rampuptime=15):
@@ -248,6 +260,19 @@ class A7585:
         
         #self.SetEnable(True)
         return True
+    
+    def debug(self):
+        test_register = NIPMREG_VOUT
+        bin_register = struct.pack("B",test_register)
+        bin_type = struct.pack("B",3)     
+        bin_memory_addr = bin_register + bin_type
+        
+        self.i2c.writeto(self.address,bin_memory_addr,False)
+        buffer = self.i2c.readfrom(self.address,4,True)
+
+        float_data = struct.unpack("f",buffer)
+        print(buffer,float_data)
+        return buffer
 
     
     
