@@ -16,8 +16,8 @@ class device:
     def __init__(self,rtc):
         try:
             self.rtc = rtc          #The rtc
-            self.ID = "SIPM & EMUSIC POWER 10.42.0.130"
-            self.IP = '10.42.0.130'
+            self.ID = "SIPM & EMUSIC POWER 10.42.0.151"
+            self.IP = '10.42.0.151'
             # self.IP = '192.168.0.59'
             
 
@@ -33,9 +33,11 @@ class device:
             self.HVStatus = 0
             self.eMUSIC_config = []
             self.Mode = 2
+            self.config_status = 1
 
             try:
                 self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus,self.Mode  = config_reader()
+                self.Mode = int((self.Mode!=0))*2
             except:
                 log("Error loading calibration file: Could not transfer data from list of calibrations to variables in class. Continue with normal configuration")
 
@@ -53,8 +55,11 @@ class device:
             utime.sleep_ms(10)
             try:
                 self.EMUSIC = eMUSIC(17,18,16,19)
-                self.eMUSIC_config = self.EMUSIC.read_calib()
-                self.EMUSIC.write_config(self.eMUSIC_config)
+                #self.eMUSIC_config = self.EMUSIC.read_calib()
+                self.EMUSIC.write_config(self.EMUSIC.read_calib())
+                self.eMUSIC_config = self.EMUSIC.read_config()
+                saved_config = self.EMUSIC.read_calib()
+                config_status =  int(self.eMUSIC_config==saved_config)
             except Exception as e:
                 log(f"EMUSIC Controller object cannot be started up with Error: {e}")
                 error_log(f"EMUSIC Controller object cannot be started up with Error: {e}")
@@ -101,12 +106,14 @@ class device:
                 #    eMUSIC_flag = False
                 #else: 
                 #    eMUSIC_flag = True 
-                self.eMUSIC_config = self.EMUSIC.read_config()
-                saved_config = self.EMUSIC.read_calib()    
-                config_status = int(self.eMUSIC_config==saved_config)
-                if config_status == 0:
-                    self.EMUSIC.write_config(saved_config)
-                    log("Renewed Config!")
+                #self.eMUSIC_config = self.EMUSIC.read_config()
+                #saved_config = self.EMUSIC.read_calib()
+                #self.eMUSIC_config = self.EMUSIC.read_calib()
+                #config_status = 1
+                #int(self.eMUSIC_config==saved_config)
+                #if config_status == 0:
+                #    self.EMUSIC.write_config(saved_config)
+                #    log("Renewed Config!")
 
                 ch_status = ",".join(str(x) for x in self.eMUSIC_config[24+4::11])
                 pz_status = ",".join(str(x) for x in self.eMUSIC_config[29+4::11])
@@ -145,11 +152,11 @@ class device:
                 ENDIFFDRVHG = self.eMUSIC_config[11]
                 ENDIFFDRVLG = self.eMUSIC_config[15]
                 
-                self.data = f"{Vout:.3f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{config_status},{ch_status},{pz_status},{rladpz_status},{capppz_status},{vdcch_status},{lowat_status},{offsset},{temp:.2f},{mode},{dvth},{DIGIALL},{sum_string},{ENPZHG},{ENPZLG},{HLSUMHG},{HLSUMLG},{ENBYPASSHG},{ENBYPASSLG},{ENDIFFDRVHG},{ENDIFFDRVLG},{vtarget:.3f}"       
+                self.data = f"{Vout:.3f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{self.config_status},{ch_status},{pz_status},{rladpz_status},{capppz_status},{vdcch_status},{lowat_status},{offsset},{temp:.2f},{mode},{dvth},{DIGIALL},{sum_string},{ENPZHG},{ENPZLG},{HLSUMHG},{HLSUMLG},{ENBYPASSHG},{ENBYPASSLG},{ENDIFFDRVHG},{ENDIFFDRVLG},{vtarget:.3f}"       
                 stop = utime.ticks_ms()
                               
                 #print(f"Data: {self.data} {utime.ticks_diff(stop,start)}")
-                utime.sleep(30)
+                utime.sleep(5)
             
 
     def server(self,received):
@@ -199,9 +206,11 @@ class device:
                 MODE = int(received.split(" ")[1])
                 if MODE == 0:
                     self.DEV.SetMode(0) #Mode 0 is for digital mode w/ temp comp.
+                    self.Mode = 0
                 else:
                     self.DEV.SetMode(2) #Mode 2 is for digital mode with temp. comp
-                self.Mode = MODE
+                    self.Mode = 2
+                
             # EMUSIC STUFF
             
             elif "SET_EMUSIC_CONFIG" in received:
@@ -210,9 +219,33 @@ class device:
                 log("Config rcv.! :",config[:5],"...")
                 self.EMUSIC.write_calib(config)
                 self.EMUSIC.write_config(config)
+                
+                self.eMUSIC_config = self.EMUSIC.read_config()
+                saved_config = self.EMUSIC.read_calib()
+                self.config_status =  int(self.eMUSIC_config==saved_config)
+
+            
+            elif "SET_EMUSIC_DEBUG" in received:
+                data = received
+                config = [int(x) for x in data.split(" ",1)[1].replace(" ","")[1:-1].split(",")]
+                log("Config rcv.! :",config[:5],"...")
+                self.EMUSIC.write_calib(config)
+                self.EMUSIC.write_config(config)
+                
+                utime.sleep_ms(100)
+                                
+                self.eMUSIC_config = self.EMUSIC.read_config()
+                saved_config = self.EMUSIC.read_calib()
+                self.config_status =  int(self.eMUSIC_config==saved_config)
+                
+                self.read_flag = False
+                config_writer(self.rtc,[self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus,self.Mode])
+                
+                return f"{self.eMUSIC_config}"
 
             self.read_flag = False
             config_writer(self.rtc,[self.max_voltage,self.max_current,self.voltage,self.ramp,self.HVStatus,self.Mode])
+            
             return "INTERNAL"
         else:
             return "A"
@@ -221,4 +254,3 @@ class device:
         self.runFlag = False
         gc.collect()
         _thread.exit()
-
