@@ -1,3 +1,4 @@
+
 #Wed Feb 14 15:23:42 2024
 import socket
 import time
@@ -21,8 +22,8 @@ sensor_file = None
 second_thread = None
 sensor = None
 
-ID = "EMERGENCY - 10.42.0.199"
-IP = ('10.42.0.199' ,'255.255.255.0','10.42.0.1','10.42.0.1')
+ID = "EMERGENCY - 10.42.0.150"
+IP = ('10.42.0.150' ,'255.255.255.0','10.42.0.1','10.42.0.1')
 wlan_ips = '0.0.0.0'
 
 memory = os.listdir()
@@ -56,7 +57,6 @@ for i in range(5):
         #wlan_ips = t_wlan(SSID,PASS,IP)
         wlan_ips = pico_wlan(SSID,PASS,IP)
         log("Device IP:",wlan_ips[0])
-        time.sleep_ms(5)
         break
     except Exception as e:
         blink(led)
@@ -64,7 +64,6 @@ for i in range(5):
         error_log(f"Network Error: {e}")
 
 if wlan_ips == '0.0.0.0':
-    time.sleep(60)
     soft_reset()
 
     
