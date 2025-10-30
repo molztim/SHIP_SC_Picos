@@ -39,11 +39,11 @@ class laserrangefinder():
         if self.uart.any():
         #if True:
             rxData = self.uart.read(64)
-            #print(rxData)
+            print(rxData)
             if rxData:
-                if len(rxData) == 11:
+                if len(rxData) <= 11:
                     # We run at 1mm resolution, so we have to think, that ddd.ddd is in 1.0mm
-                    distance = float("".join([chr(x) for x in rxData[3:-1]]))*1000
+                    distance = float("".join([chr(x) for x in rxData[3:10]]))*1000
                     #print(i,distance)
                     return distance
 
