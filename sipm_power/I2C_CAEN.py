@@ -62,7 +62,7 @@ class A7585:
         #i2c_sda = Pin(20) 
         #i2c_scl = Pin(21) 
         try:
-            self.i2c = I2C(0,sda=i2c_sda,scl=i2c_scl,freq=100000)
+            self.i2c = I2C(0,sda=i2c_sda,scl=i2c_scl,freq=100000) #100kHz
         except:
             print("Error 01: Init error")
         
@@ -279,4 +279,3 @@ class A7585:
     
     
     
-

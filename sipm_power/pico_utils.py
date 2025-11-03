@@ -1,3 +1,4 @@
+
 #Utillity platform
 import os
 import network
@@ -87,6 +88,25 @@ def log(*service_string):
     return None
 
 def error_log(string):
+
+    error_log = open("error_log.txt","r")
+    content = error_log.read().split("\n")
+    error_log.close()
+    max_length = 100
+
+    if len(content) > max_length+2:
+        log("Reduce size of error log ...")
+        new_content = "\n".join(line for line in content[:2] + content[-round(max_length/2):])
+        #print(new_content)
+        
+        error_log = open("error_log.txt","w")
+        error_log.write(new_content)
+        error_log.close()
+        log(f"Rewrote Error log to size of {max_length+2}")
+    else:
+        log("Error log OK!")
+
+
     now = lt()
     head = "{:02d}.{:02d}.{:02d}-{:02d}:{:02d}:{:02d}|".format(now[2],now[1],now[0],now[4],now[5],now[6])
     output = head +string
