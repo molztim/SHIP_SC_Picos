@@ -1,7 +1,7 @@
 # Bibliotheken laden
 import machine
 import network 
-import utime as time
+import utime
 import binascii
 import ubinascii
 
@@ -251,21 +251,11 @@ fastic_registers = {
 "SH_Rout" : [66, 6, 1],
 "SH_VoutDC" : [68, 0, 8],
 "TDC_ArbModeRR" : [133, 7, 1],
-"TDC_AuroraCBCooldown" : [160, 0, 24],
-"TDC_AuroraCBCooldown" : [159, 0, 36],
-"TDC_AuroraCBCooldown" : [161, 0, 8],
-"TDC_AuroraCBLength" : [157, 0, 24],
-"TDC_AuroraCBLength" : [154, 4, 36],
-"TDC_AuroraCBLength" : [158, 0, 8],
-"TDC_AuroraCBWait" : [152, 0, 24],
-"TDC_AuroraCBWait" : [149, 4, 36],
-"TDC_AuroraCBWait" : [153, 0, 8],
-"TDC_AuroraCCLength" : [155, 0, 24],
-"TDC_AuroraCCLength" : [154, 0, 36],
-"TDC_AuroraCCLength" : [156, 0, 8],
-"TDC_AuroraCCWait" : [150, 0, 24],
-"TDC_AuroraCCWait" : [149, 0, 36],
-"TDC_AuroraCCWait" : [151, 0, 8],
+"TDC_AuroraCBCooldown" : [[159, 0, 4],[160, 0, 8],[161, 0, 8]],
+"TDC_AuroraCBLength" : [[154, 4, 4],[157, 0, 8],[158, 0, 8]],
+"TDC_AuroraCBWait" : [[149, 4, 4],[152, 0, 8],[153, 0, 8]],
+"TDC_AuroraCCLength" : [[154, 0, 4],[155, 0, 8],[156, 0, 8]],
+"TDC_AuroraCCWait" : [[149, 4, 4],[150, 0, 8],[151, 0, 8]],
 "TDC_AuroraInitWait" : [159, 4, 4],
 "TDC_AuroraMaxFrameSize" : [162, 0, 8],
 "TDC_AuroraScramblingEn" : [137, 7, 1],
@@ -289,30 +279,22 @@ fastic_registers = {
 "TDC_CoarseExtForce" : [137, 6, 1],
 "TDC_CoarseExtPeriod" : [147, 5, 3],
 "TDC_DebugMode" : [146, 5, 1],
-"TDC_EnergyMaxPW" : [139, 0, 22],
-"TDC_EnergyMaxPW" : [138, 0, 8],
-"TDC_EnergyMinPW" : [137, 0, 22],
-"TDC_EnergyMinPW" : [136, 0, 8],
+"TDC_EnergyMaxPW" : [[139, 0, 6],[138, 0, 8]],
+"TDC_EnergyMinPW" : [[137, 0, 6],[136, 0, 8]],
 "TDC_EnergyOptBW" : [143, 7, 1],
 "TDC_FifoUnlockTh" : [148, 0, 6],
 "TDC_MuxOut_Sel" : [130, 5, 3],
 "TDC_SLVDS_DriveStr" : [189, 0, 3],
 "TDC_SerializerIdleForce" : [135, 7, 1],
-"TDC_SerializerIdleWord" : [165, 0, 24],
-"TDC_SerializerIdleWord" : [164, 0, 40],
-"TDC_SerializerIdleWord" : [163, 0, 56],
-"TDC_SerializerIdleWord" : [166, 0, 8],
+"TDC_SerializerIdleWord" : [[163, 0, 8],[164, 0, 8],[165, 0, 8],[166, 0, 8]],
 "TDC_SkewEn" : [146, 7, 1],
 "TDC_SkewFwd" : [146, 6, 1],
 "TDC_SkewShift" : [146, 0, 5],
 "TDC_SmallBin" : [133, 6, 1],
 "TDC_StatisticsPeriod" : [147, 0, 5],
-"TDC_TimeEnergyMaxDeltaT" : [145, 0, 24],
-"TDC_TimeEnergyMaxDeltaT" : [144, 0, 8],
-"TDC_TimeMaxPW" : [135, 0, 22],
-"TDC_TimeMaxPW" : [134, 0, 8],
-"TDC_TimeMinPW" : [133, 0, 22],
-"TDC_TimeMinPW" : [132, 0, 8],
+"TDC_TimeEnergyMaxDeltaT" : [[145, 0, 8],[144, 0, 8]],
+"TDC_TimeMaxPW" : [[135, 0, 6],[134, 0, 8]],
+"TDC_TimeMinPW" : [[133, 0, 6],[132, 0, 8]],
 "TDC_TrgValDelay" : [131, 2, 3],
 "TDC_TrgValEn" : [131, 0, 1],
 "TDC_TrgValSrcExt" : [131, 1, 1],
@@ -320,10 +302,8 @@ fastic_registers = {
 "TDC_TrigBlockEn" : [130, 0, 1],
 "TDC_TrigCalibEn" : [130, 1, 1],
 "TDC_TrigEnergyIgnore" : [143, 6, 1],
-"TDC_TrigMaxPW" : [143, 0, 22],
-"TDC_TrigMaxPW" : [142, 0, 8],
-"TDC_TrigMinPW" : [141, 0, 22],
-"TDC_TrigMinPW" : [140, 0, 8],
+"TDC_TrigMaxPW" : [[143, 0, 6],[142, 0, 8]],
+"TDC_TrigMinPW" : [[141, 0, 6],[140, 0, 8]],
 "TDC_TrigSrcExt" : [130, 2, 1],
 "TEST_ABUFF_Ccomp" : [96, 4, 3],
 "TEST_ABUFF_Ibias_OTA" : [96, 0, 4],
@@ -368,22 +348,24 @@ class FastIC:
         # SCL pin: 27
         try:
             #TheFastIC requires 1MHz to run.
-            self.i2c = I2C(1,sda=i2c_sda,scl=i2c_scl,freq=1000000)
+            freq1 = 1_000_000
+            freq2 = 100_000
+            freq3 = 10_000
+            self.i2c = I2C(1,sda=i2c_sda,scl=i2c_scl,freq=freq2)
         except:
             print("Error 01: Init error")
             
     def read_i2c(self,register,reglen=1):
         # The grassroot I2C communication function to read data from the line
-        
         binary_register = struct.pack("B",register)
         self.i2c.writeto(self.addr,binary_register)
+        utime.sleep_ms(1) 
         rcv_data = self.i2c.readfrom(self.addr,reglen)
         #rcv_data = b'\xFF' #2A is 42
         return rcv_data
     
     def write_i2c(self,register,data):
         # The grassroot I2C communication function to write to the line
-        
         binary_register = struct.pack("B",register)
         if type(data) != list:
             binary_data = struct.pack("B",data)
@@ -392,26 +374,69 @@ class FastIC:
             buffer = binary_register + struct.pack(f"{len(data)}B", *data)
         #print("WRTING BUFFER: ",buffer)
         self.i2c.writeto(self.addr,buffer)
+        utime.sleep_ms(1) 
         
     def read_fastic(self,register):
         # A function to capture the whish for a reading and the register
-        reg_value, reg_position, reg_length = self.fastic_registers[register]
-        bin_data = self.read_i2c(reg_value)
-        #print("Bin data:",bin_data)
-        #print("{0:b}".format(2**reg_length - 1 << reg_position))
-        int_data = (bin_data[0] & (2**reg_length - 1 << reg_position)) >> reg_position # Takes binary data, creates a mask. The mask is a binary 1 with the length or reg_length, and moved to the right by reg_value
-        return int_data
+        
+        # Since we have some settings that are composed of multiple registers, this has to be accounted for
+        # For these settings, all registers are saved in a nested list
+        
+        if not (any(isinstance(i, list) for i in self.fastic_registers[register])):
+            reg_value, reg_position, reg_length = self.fastic_registers[register]
+            bin_data = self.read_i2c(reg_value)
+            #print("Bin data:",bin_data)
+            #print("{0:b}".format(2**reg_length - 1 << reg_position))
+            int_data = (bin_data[0] & (2**reg_length - 1 << reg_position)) >> reg_position # Takes binary data, creates a mask. The mask is a binary 1 with the length or reg_length, and moved to the right by reg_value
+            return int_data
+        else:
+            # Important point here: the data is plit in 8 bits. The higher bits are saved in the first registers
+            # For example: 15-8 bits are in Reg 0x01, 7-0 bits are in register 0x02
+            # If we have multiple registers per setting:
+            combined_int = 0
+            HowManyRegisters = len(self.fastic_registers[register])
+            #print(f"DEBUG: {register} - HowManyRegisters {HowManyRegisters}")
+            for i in range(len(self.fastic_registers[register])):
+                reg_value, reg_position, reg_length = self.fastic_registers[register][i]
+                bin_data = self.read_i2c(reg_value)
+                # int_data is now one part of the final value
+                int_data = (bin_data[0] & (2**reg_length - 1 << reg_position)) >> reg_position # Takes binary data, creates a mask. The mask is a binary 1 with the length or reg_length, and moved to the right by reg_value
+                #print(f"READ: {bin_data} - {int_data}")
+                combined_int = combined_int + (int_data << (HowManyRegisters - i - 1)*8)
+            return combined_int
+                
     
     def write_fastic(self, register, data):
         # A function to execute the writing process
-        # First: Read back the value from the corresponding register
-        reg_value, reg_position, reg_length = self.fastic_registers[register]
-        bin_data = self.read_i2c(reg_value)
-        data_shifted = data << reg_position
-        mask_bin_data = (2**reg_length-1 << reg_position) ^ 0xFF
-        #print("{8:b}".format())
-        write_data = bin_data[0] & mask_bin_data | data_shifted
-        self.write_i2c(reg_value,write_data)
+        
+        # So I had to adjust some things here because some settings use more than one registers
+        # These will use [[],[]] to contain all the registers for one setting 
+        
+        if not (any(isinstance(i, list) for i in self.fastic_registers[register])):
+            # First: Read back the value from the corresponding register
+            reg_value, reg_position, reg_length = self.fastic_registers[register]
+            bin_data = self.read_i2c(reg_value)
+            data_shifted = data << reg_position
+            mask_bin_data = (2**reg_length-1 << reg_position) ^ 0xFF
+            #print("{8:b}".format())
+            write_data = bin_data[0] & mask_bin_data | data_shifted
+            self.write_i2c(reg_value,write_data)
+        else:
+            # If we have multiple registers per setting:
+            # Important point here: the data is plit in 8 bits. The higher bits are saved in the first registers
+            # For example: 15-8 bits are in Reg 0x01, 7-0 bits are in register 0x02
+            HowManyRegisters = len(self.fastic_registers[register])
+            for i in range(len(self.fastic_registers[register])):
+                reg_value, reg_position, reg_length = self.fastic_registers[register][i]
+                bin_data = self.read_i2c(reg_value)
+                # Here we extract the 8 bits for this transmission
+                data_chunk = data >> (HowManyRegisters - i - 1) * 8 & 0xFF
+                data_shifted = data_chunk << reg_position 
+                mask_bin_data = (2**reg_length-1 << reg_position) ^ 0xFF
+                #print("{8:b}".format())
+                write_data = bin_data[0] & mask_bin_data | data_shifted
+                self.write_i2c(reg_value,write_data)
+                
         
     def get_fastic_register(self,register):
         return self.fastic_registers[register]
@@ -429,9 +454,9 @@ class FastIC:
         for d,k in zip(datalist,alpha_keylist):
             self.write_fastic(k,d)
             
-    def read_calib(self):
+    def read_calib(self,file='fastic_calib.txt'):
         # Reading the local calibration file
-        file = open('fastic_calib.txt', 'r')
+        file = open(file, 'r') # DELETE AFTER TEST
         content = file.read()
         data = [int(e.split(" = ")[1]) for e in content.split("\n")]
         file.close()
@@ -439,7 +464,7 @@ class FastIC:
     
     def write_calib(self,data):
         # Writing the local calibration file in a human readable way
-        file = open('fastic_calib.txt', 'w')
+        file = open('fastic_calib.txt', 'w') # DELETE AFTER TEST
         text = ""
         for k,d in zip(alpha_keylist,data):
             text += f"{k} = {d}\n"
