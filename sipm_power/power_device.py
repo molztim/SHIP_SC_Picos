@@ -30,8 +30,8 @@ class device:
         try:
             # Initialize all the variables we need for operation
             self.rtc = rtc          #The rtc
-            self.ID = "SIPM & EMUSIC POWER 10.42.0.132"
-            self.IP = '10.42.0.132'
+            self.ID = "SIPM & EMUSIC POWER 10.42.0.128"
+            self.IP = '10.42.0.128'
             
             
 
@@ -199,7 +199,22 @@ class device:
         else:
             # Here we test, if we can chuck the entire config in one go
             with self.file_lock:
-                self.config_status = int(self.FastIC.read_calib()==self.FastIC.read_config())
+                local_config = self.FastIC.read_calib() 
+            for attempt in range(30):
+                try:
+                    board_config = self.FastIC.read_config()
+                    self.config_status = int(local_config == board_config)
+                    break
+                except:
+                    log(f" {attempt} FastIC+ not rechable ATM")
+                    self.config_status = 0
+                try:
+                    if self.config_status != 1:
+                        log("Wrong FastIC config! Send config again!")
+                        self.FastIC.write_config(self.FastIC.read_calib())
+                except:
+                    None
+                utime.sleep_ms(150)
             hexconfig = "STR:"+"".join(f"{e:02X}" for e in self.FastIC_config)
             self.data = f"{Vout:.3f},{Iout:.2f},{Vin:.2f},{statusHV:.2f},{connectionHV:.2f},{temp:.2f},{mode},{vtarget:.3f},{self.config_status},{self.configID},{self.device_type}"#  +  fastic_string
             #print(f"Config Status: {self.config_status}")
